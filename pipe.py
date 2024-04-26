@@ -1,12 +1,9 @@
-# pipe.py: Template para implementação do projeto de Inteligência Artificial 2023/2024.
-# Devem alterar as classes e funções neste ficheiro de acordo com as instruções do enunciado.
-# Além das funções e classes sugeridas, podem acrescentar outras que considerem pertinentes.
-
-# Grupo 00:
-# 00000 Nome1
-# 00000 Nome2
+# Grupo 06:
+# 107301 João Ricardo Fernandes Caçador
+# 106794 Tiago Castro Santos
 
 import sys
+import numpy as np
 from search import (
     Problem,
     Node,
@@ -16,7 +13,8 @@ from search import (
     greedy_search,
     recursive_best_first_search,
 )
-
+from sys import stdin
+from numpy import array
 
 class PipeManiaState:
     state_id = 0
@@ -56,16 +54,14 @@ class Board:
     def parse_instance():
         """Lê o test do standard input (stdin) que é passado como argumento
         e retorna uma instância da classe Board.
-
-        Por exemplo:
-            $ python3 pipe.py < test-01.txt
-
-            > from sys import stdin
-            > line = stdin.readline().split()
         """
-        # TODO
-        pass
-
+        board = []
+        line = stdin.readline().split()
+        while line:
+            board.append(line)  
+            line = stdin.readline().split()
+        return np.array(board)
+    
     # TODO: outros metodos da classe
 
 
@@ -106,8 +102,7 @@ class PipeMania(Problem):
 
 if __name__ == "__main__":
     # TODO:
-    # Ler o ficheiro do standard input,
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
     # Imprimir para o standard output no formato indicado.
-    pass
+    board = Board().parse_instance()
