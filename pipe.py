@@ -32,7 +32,11 @@ class PipeManiaState:
 
 class Board:
     """Representação interna de um tabuleiro de PipeMania."""
-
+    content = None
+    
+    def __init__(self, content):
+        self.content = content
+    
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
         # TODO
@@ -60,7 +64,7 @@ class Board:
         while line:
             board.append(line)  
             line = stdin.readline().split()
-        return np.array(board)
+        return Board(np.array(board))
     
     # TODO: outros metodos da classe
 
@@ -105,4 +109,5 @@ if __name__ == "__main__":
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
     # Imprimir para o standard output no formato indicado.
-    board = Board().parse_instance()
+    board = Board.parse_instance()
+    
