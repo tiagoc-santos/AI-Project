@@ -33,26 +33,39 @@ class PipeManiaState:
 class Board:
     """Representação interna de um tabuleiro de PipeMania."""
     content = None
+    size = 0
     
-    def __init__(self, content):
+    def __init__(self, content, size):
         self.content = content
+        self.size = size
     
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
-        # TODO
-        pass
+        return self.content[row][col]
 
     def adjacent_vertical_values(self, row: int, col: int) -> (str, str):
         """Devolve os valores imediatamente acima e abaixo,
         respectivamente."""
-        # TODO
-        pass
+        if(row == 0):
+            return (None, self.get_value(row+1, col))
+        
+        elif(row == (self.size - 1)):
+            return (self.get_value(row-1, col), None)
+        
+        else:
+            return(self.get_value(row-1, col), self.get_value(row+1, col))
 
     def adjacent_horizontal_values(self, row: int, col: int) -> (str, str):
         """Devolve os valores imediatamente à esquerda e à direita,
         respectivamente."""
-        # TODO
-        pass
+        if(col == 0):
+            return (None, self.get_value(row, col+1))
+        
+        elif(col == (self.size - 1)):
+            return (self.get_value(row, col - 1), None)
+        
+        else:
+            return(self.get_value(row, col-1), self.get_value(row, col+1))
 
     @staticmethod
     def parse_instance():
@@ -61,14 +74,22 @@ class Board:
         """
         board = []
         line = stdin.readline().split()
+        size = len(line)
         while line:
             board.append(line)  
             line = stdin.readline().split()
-        return Board(np.array(board))
+        return Board(np.array(board), size)
+    
+    def print(self):
+        for i in range(0, self.size):
+            for j in range(0, self.size):
+                if(j < (self.size - 1)):
+                    print(self.get_value(i, j), end = '\t')
+                else:
+                    print(self.get_value(i, j))
     
     # TODO: outros metodos da classe
-
-
+      
 class PipeMania(Problem):
     def __init__(self, board: Board):
         """O construtor especifica o estado inicial."""
@@ -110,4 +131,4 @@ if __name__ == "__main__":
     # Retirar a solução a partir do nó resultante,
     # Imprimir para o standard output no formato indicado.
     board = Board.parse_instance()
-    
+    board.print()
