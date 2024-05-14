@@ -25,10 +25,11 @@ class PipeManiaState:
         PipeManiaState.state_id += 1
 
     def __lt__(self, other):
+        """ Este método é utilizado em caso de empate na gestão da lista
+        de abertos nas procuras informadas. """
         return self.id < other.id
 
     # TODO: outros metodos da classe
-
 
 class Board:
     """Representação interna de um tabuleiro de PipeMania."""
@@ -93,14 +94,17 @@ class Board:
 class PipeMania(Problem):
     def __init__(self, board: Board):
         """O construtor especifica o estado inicial."""
-        # TODO
-        pass
+        self.state = PipeManiaState(board)
 
     def actions(self, state: PipeManiaState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
-        # TODO
-        pass
+        board = state.board
+        actions = np.array()
+        for i in range(0, board.size):
+            for j in range(0, self.size):
+                actions = np.append(actions, (i, j, ))
+        
 
     def result(self, state: PipeManiaState, action):
         """Retorna o estado resultante de executar a 'action' sobre
@@ -131,4 +135,5 @@ if __name__ == "__main__":
     # Retirar a solução a partir do nó resultante,
     # Imprimir para o standard output no formato indicado.
     board = Board.parse_instance()
+    problem = PipeMania(board)
     board.print()
