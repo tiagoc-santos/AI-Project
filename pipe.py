@@ -33,16 +33,21 @@ class PipeManiaState:
 
 class Board:
     """Representação interna de um tabuleiro de PipeMania."""
-    content = None
+    content = []
     size = 0
     
     def __init__(self, content, size):
         self.content = content
         self.size = size
+        self.domains = np.empty(size * size, dtype= object)
     
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
         return self.content[row][col]
+    
+    def board_index(self, row: int, col: int) -> int:
+        """Devolve o indice de uma peca do tabulerio dada a sua linha e coluna."""
+        return row * self.size + col
 
     def adjacent_vertical_values(self, row: int, col: int) -> (str, str):
         """Devolve os valores imediatamente acima e abaixo,
@@ -68,18 +73,102 @@ class Board:
         else:
             return(self.get_value(row, col-1), self.get_value(row, col+1))
 
+
+    def create_domain(self, row: int, col: int, piece: str):
+        if row == 0:
+            if piece[0] == 'F':
+                if col == 0:
+                    self.domains[self.board_index(row, col)] = np.array(['FB', 'FD'])
+                elif col == self.size -1:
+                    self.domains[self.board_index(row, col)] = np.array(['FB', 'FE'])
+                else:
+                    self.domains[self.board_index(row, col)] = np.array(['FB', 'FE', 'FD'])
+            
+            if piece[0] == 'B':
+                self.domains[self.board_index(row, col)] = np.array(['BB'])
+            
+            if piece[0] == 'V':
+                if col == 0:
+                    self.domains[self.board_index(row, col)] = np.array(['VB'])
+                elif col == self.size -1:
+                    self.domains[self.board_index(row, col)] = np.array(['VE']) 
+                else:
+                    self.domains[self.board_index(row, col)] = np.array(['VB', 'VE'])
+
+        elif row == self.size - 1:
+            if piece[0] == 'F':
+                if col == 0:
+                    self.domains[self.board_index(row, col)] = np.array(['FC', 'FD'])
+                elif col == self.size -1:
+                    self.domains[self.board_index(row, col)] = np.array(['FC', 'FE'])
+                else:
+                    self.domains[self.board_index(row, col)] = np.array(['FC', 'FE', 'FD'])
+            
+            if piece[0] == 'B':
+                self.domains[self.board_index(row, col)] = np.array(['BC'])
+            
+            if piece[0] == 'V':
+                if col == 0:
+                    self.domains[self.board_index(row, col)] = np.array(['VD'])
+                elif col == self.size -1:
+                    self.domains[self.board_index(row, col)] = np.array(['VC']) 
+                else:
+                    self.domains[self.board_index(row, col)] = np.array(['VD', 'VC'])
+        
+        elif col == 0:
+            if piece[0] == 'F':
+                self.domains[self.board_index(row, col)] = np.array(['FC','FB','FD'])
+                
+            elif piece[0] == 'B':
+                self.domains[self.board_index(row, col)] = np.array(['BD'])
+            
+            elif piece[0] == 'V':
+                self.domains[self.board_index(row, col)] = np.array(['VD', 'VB'])
+            
+            else:
+                self.domains[self.board_index(row, col)] = np.array(['LV'])
+        
+        elif col == self.size -1:
+            if piece[0] == 'F':
+                self.domains[self.board_index(row, col)] = np.array(['FC','FB','FE'])
+                
+            elif piece[0] == 'B':
+                self.domains[self.board_index(row, col)] = np.array(['BE'])
+            
+            elif piece[0] == 'V':
+                self.domains[self.board_index(row, col)] = np.array(['VC', 'VE'])
+                
+            else:
+                self.domains[self.board_index(row, col)] = np.array(['LV'])
+        else:
+            if piece[0] == 'F':
+                self.domains[self.board_index(row, col)] = np.array(['FC','FB','FE', 'FD'])
+                
+            elif piece[0] == 'B':
+                self.domains[self.board_index(row, col)] = np.array(['BC', 'BB', 'BD', 'BE'])
+            
+            elif piece[0] == 'V':
+                self.domains[self.board_index(row, col)] = np.array(['VC', 'VB','VD','VE'])
+                
+            else:
+                self.domains[self.board_index(row, col)] = np.array(['LH', 'LV'])
+    
     @staticmethod
     def parse_instance():
         """Lê o test do standard input (stdin) que é passado como argumento
         e retorna uma instância da classe Board.
         """
-        board = []
         line = stdin.readline().split()
         size = len(line)
+        i = 0
+        board = Board([], size)
         while line:
-            board.append(line)  
+            board.content.append(line)  
+            for j in range(0, size):
+                board.create_domain(i, j, line[j])
+            i += 1
             line = stdin.readline().split()
-        return Board(np.array(board), size)
+        return board
     
     def print(self):
         for i in range(0, self.size):
@@ -89,7 +178,155 @@ class Board:
                 else:
                     print(self.get_value(i, j))
     
-    # TODO: outros metodos da classe
+    def satisfy_constraints_up(self, row: int, col:int):
+        pipe1 = self.get_value(row + 1, col)
+        pipe2 = self.get_value(row, col)
+        pipe2_domain = self.domains[self.board_index(row, col)]
+
+        if pipe1 in ['FC', 'BC', 'BD', 'BE', 'VC', 'VD', 'LV']:
+            if (pipe2[0] == 'F'):
+                if (pipe1 == 'FC'):
+                    restrictions = np.array(['FC', 'FD', 'FE', 'FB'])
+                else:    
+                    restrictions = np.array(['FC', 'FD', 'FE'])
+            
+            elif (pipe2[0] == 'B'):
+                restrictions = np.array(['BC'])
+            
+            elif (pipe2[0] == 'V'):
+                restrictions = np.array(['VD', 'VC'])
+
+            elif (pipe2[0] == 'L'):
+                restrictions = np.array(['LH'])
+            
+        else:
+            if (pipe2[0] == 'F'):
+                restrictions = np.array(['FB'])
+            
+            elif (pipe2[0] == 'B'):
+                restrictions = np.array(['BB', 'BD', 'BE'])
+            
+            elif (pipe2[0] == 'V'):
+                restrictions = np.array(['VB', 'VE'])
+
+            elif (pipe2[0] == 'L'):
+                restrictions = np.array(['LV'])
+
+        mask = np.isin(pipe2_domain, restrictions, invert=True)
+        self.domains[self.board_index(row, col)] = pipe2_domain[mask]   
+
+    def satisfy_constraints_down(self, row: int, col:int):
+        pipe1 = self.get_value(row - 1, col)
+        pipe2 = self.get_value(row, col)
+        pipe2_domain = self.domains[self.board_index(row, col)]
+
+        if pipe1 in ['FB', 'BD', 'BE', 'BB', 'VE', 'VB', 'LV']:
+            if (pipe2[0] == 'F'):
+                if (pipe1 == 'FB'):
+                    restrictions = np.array(['FC', 'FD', 'FE', 'FB'])
+                else:    
+                    restrictions = np.array(['FC', 'FD', 'FE'])
+            
+            elif (pipe2[0] == 'B'):
+                restrictions = np.array(['BB'])
+            
+            elif (pipe2[0] == 'V'):
+                restrictions = np.array(['VE', 'VB'])
+
+            elif (pipe2[0] == 'L'):
+                restrictions = np.array(['LH'])
+            
+        else:
+            if (pipe2[0] == 'F'):
+                restrictions = np.array(['FC'])
+            
+            elif (pipe2[0] == 'B'):
+                restrictions = np.array(['BC', 'BD', 'BE'])
+            
+            elif (pipe2[0] == 'V'):
+                restrictions = np.array(['VC', 'VD'])
+
+            elif (pipe2[0] == 'L'):
+                restrictions = np.array(['LV'])
+
+        mask = np.isin(pipe2_domain, restrictions, invert=True)
+        self.domains[self.board_index(row, col)] = pipe2_domain[mask] 
+
+    def satisfy_constraints_left(self, row: int, col:int):
+        pipe1 = self.get_value(row, col + 1)
+        pipe2 = self.get_value(row, col)
+        pipe2_domain = self.domains[self.board_index(row, col)]
+
+        if pipe1 in ['FE', 'BC', 'BB', 'BE', 'VC', 'VE', 'LH']:
+            if (pipe2[0] == 'F'):
+                if (pipe1 == 'FE'):
+                    restrictions = np.array(['FC', 'FD', 'FE', 'FB'])
+                else:    
+                    restrictions = np.array(['FC', 'FB', 'FE'])
+            
+            elif (pipe2[0] == 'B'):
+                restrictions = np.array(['BE'])
+            
+            elif (pipe2[0] == 'V'):
+                restrictions = np.array(['VE', 'VC'])
+
+            elif (pipe2[0] == 'L'):
+                restrictions = np.array(['LV'])
+            
+        else:
+            if (pipe2[0] == 'F'):
+                restrictions = np.array(['FD'])
+            
+            elif (pipe2[0] == 'B'):
+                restrictions = np.array(['BB', 'BD', 'BC'])
+            
+            elif (pipe2[0] == 'V'):
+                restrictions = np.array(['VB', 'VD'])
+
+            elif (pipe2[0] == 'L'):
+                restrictions = np.array(['LH'])
+
+        mask = np.isin(pipe2_domain, restrictions, invert=True)
+        self.domains[self.board_index(row, col)] = pipe2_domain[mask]      
+        
+    def satisfy_constraints_right(self, row: int, col:int):
+        pipe1 = self.get_value(row, col - 1)
+        pipe2 = self.get_value(row, col)
+        pipe2_domain = self.domains[self.board_index(row, col)]
+
+        if pipe1 in ['FD', 'BC', 'BB', 'BD', 'VB', 'VD', 'LH']:
+            if (pipe2[0] == 'F'):
+                if (pipe1 == 'FD'):
+                    restrictions = np.array(['FC', 'FD', 'FE', 'FB'])
+                else:    
+                    restrictions = np.array(['FC', 'FD', 'FB'])
+            
+            elif (pipe2[0] == 'B'):
+                restrictions = np.array(['BD'])
+            
+            elif (pipe2[0] == 'V'):
+                restrictions = np.array(['VB', 'VD'])
+
+            elif (pipe2[0] == 'L'):
+                restrictions = np.array(['LV'])
+            
+        else:
+            if (pipe2[0] == 'F'):
+                restrictions = np.array(['FE'])
+            
+            elif (pipe2[0] == 'B'):
+                restrictions = np.array(['BB', 'BC', 'BE'])
+            
+            elif (pipe2[0] == 'V'):
+                restrictions = np.array(['VC', 'VE'])
+
+            elif (pipe2[0] == 'L'):
+                restrictions = np.array(['LH'])
+
+        mask = np.isin(pipe2_domain, restrictions, invert=True)
+        self.domains[self.board_index(row, col)] = pipe2_domain[mask]
+        
+    #TODO outros metodos da classe
       
 class PipeMania(Problem):
     def __init__(self, board: Board):
@@ -101,9 +338,7 @@ class PipeMania(Problem):
         partir do estado passado como argumento."""
         board = state.board
         actions = np.array()
-        for i in range(0, board.size):
-            for j in range(0, self.size):
-                actions = np.append(actions, (i, j, ))
+
         
 
     def result(self, state: PipeManiaState, action):
@@ -135,5 +370,7 @@ if __name__ == "__main__":
     # Retirar a solução a partir do nó resultante,
     # Imprimir para o standard output no formato indicado.
     board = Board.parse_instance()
-    problem = PipeMania(board)
-    board.print()
+    print(board.domains)
+    
+
+   
