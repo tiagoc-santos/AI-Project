@@ -41,6 +41,7 @@ class Board:
         self.content = content
         self.size = size
         self.domains = np.empty(size * size, dtype= object)
+        self.is_valid = True
     
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
@@ -171,6 +172,9 @@ class Board:
             board.content.append(line)  
             for j in range(0, size):
                 board.create_domain(i, j, line[j])
+                board.content[i][j] = board.domains[board.board_index(i, j)][0]
+                if board.domains[board.board_index(i, j)].size == 1:
+                    board.assignments = np.append(board.assignments, str(i) + str(j))
             i += 1
             line = stdin.readline().split()
         board.content = np.array(board.content)
@@ -218,15 +222,26 @@ class Board:
             elif (pipe2[0] == 'L'):
                 restrictions = np.array(['LV'])
 
-        mask = np.isin(pipe2_domain, restrictions, invert=True)
-        self.domains[self.board_index(row, col)] = pipe2_domain[mask]
+        new_domain = [item for item in pipe2_domain if item not in restrictions]
+        self.domains[self.board_index(row, col)] = new_domain
+        new_domain_size = len(new_domain)
 
-        size = self.domains[self.board_index(row, col)].size
-        if size == 0:
-            self.domains[self.board_index(row, col)] = pipe2_domain
-            return False
-        elif size == 1:
-            self.assignments
+        if len(pipe2_domain) > new_domain_size:
+            if new_domain_size == 0:
+                print("Dominio vazio")
+                self.assignments = []
+                return False
+            print("-------------------")
+            print("mudou em cima de " + str(row+1) + str(col))
+            self.print()
+            print(self.domains)
+            self.content[row][col] = new_domain[0]
+            if new_domain_size == 1 and (str(row) + str(col) not in self.assignments):
+                self.assignments = np.append(self.assignments, str(row) + str(col))
+                print(self.assignments)
+            print("-------------------")
+            if not self.satisfy_constraints(row, col):
+                return False
         return True
 
     def satisfy_constraints_down(self, row: int, col:int):
@@ -263,12 +278,26 @@ class Board:
             elif (pipe2[0] == 'L'):
                 restrictions = np.array(['LV'])
 
-        
-        mask = np.isin(pipe2_domain, restrictions, invert=True)
-        self.domains[self.board_index(row, col)] = pipe2_domain[mask]
-        if self.domains[self.board_index(row, col)].size == 0:
-            self.domains[self.board_index(row, col)] = pipe2_domain
-            return False
+        new_domain = [item for item in pipe2_domain if item not in restrictions]
+        self.domains[self.board_index(row, col)] = new_domain
+        new_domain_size = len(new_domain)
+
+        if len(pipe2_domain) > new_domain_size:
+            if new_domain_size == 0:
+                print("Dominio vazio")
+                self.assignments = []
+                return False
+            print("-------------------")
+            print("mudou em baixo de " + str(row-1) + str(col))
+            self.print()
+            print(self.domains)
+            self.content[row][col] = new_domain[0]
+            if new_domain_size == 1 and (str(row) + str(col) not in self.assignments):
+                self.assignments = np.append(self.assignments, str(row) + str(col))
+                print(self.assignments)
+            print("-------------------")
+            if not self.satisfy_constraints(row, col):
+                return False
         return True
 
     def satisfy_constraints_left(self, row: int, col:int):
@@ -305,12 +334,27 @@ class Board:
             elif (pipe2[0] == 'L'):
                 restrictions = np.array(['LH'])
 
-        mask = np.isin(pipe2_domain, restrictions, invert=True)
-        self.domains[self.board_index(row, col)] = pipe2_domain[mask] 
-        if self.domains[self.board_index(row, col)].size == 0:
-            self.domains[self.board_index(row, col)] = pipe2_domain
-            return False
-        return True  
+        new_domain = [item for item in pipe2_domain if item not in restrictions]
+        self.domains[self.board_index(row, col)] = new_domain
+        new_domain_size = len(new_domain)
+
+        if len(pipe2_domain) > new_domain_size:
+            if new_domain_size == 0:
+                print("Dominio vazio")
+                self.assignments = []
+                return False
+            print("-------------------")
+            print("mudou a esquerda de " + str(row) + str(col+1))
+            self.print()
+            print(self.domains)
+            self.content[row][col] = new_domain[0]
+            if new_domain_size == 1 and (str(row) + str(col) not in self.assignments):
+                self.assignments = np.append(self.assignments, str(row) + str(col))
+                print(self.assignments)
+            print("-------------------")
+            if not self.satisfy_constraints(row, col):
+                return False
+        return True
         
     def satisfy_constraints_right(self, row: int, col:int):
         pipe1 = self.get_value(row, col - 1)
@@ -346,14 +390,62 @@ class Board:
             elif (pipe2[0] == 'L'):
                 restrictions = np.array(['LH'])
 
-        mask = np.isin(pipe2_domain, restrictions, invert=True)
-        self.domains[self.board_index(row, col)] = pipe2_domain[mask]
-        if self.domains[self.board_index(row, col)].size == 0:
-            self.domains[self.board_index(row, col)] = pipe2_domain
-            return False
-        return True
+        new_domain = [item for item in pipe2_domain if item not in restrictions]
+        self.domains[self.board_index(row, col)] = new_domain
+        new_domain_size = len(new_domain)
         
-      
+        if len(pipe2_domain) > new_domain_size:
+            if new_domain_size == 0:
+                print("Dominio vazio")
+                self.assignments = []
+                return False
+            print("-------------------")
+            print("mudou a direita de " + str(row) + str(col-1))
+            self.print()
+            print(self.domains)
+            self.content[row][col] = new_domain[0]
+            if new_domain_size == 1 and (str(row) + str(col) not in self.assignments):
+                self.assignments = np.append(self.assignments, str(row) + str(col))
+                print(self.assignments)
+            print("-------------------")
+            if not self.satisfy_constraints(row, col):
+                return False
+        return True
+    
+    def satisfy_constraints(self, row: int, col: int):
+        size = self.size
+        if row - 1 >= 0:
+            if not self.satisfy_constraints_up(row-1, col):
+                self.is_valid = False
+                return False
+                
+        if col - 1 >= 0:
+            if not self.satisfy_constraints_left(row, col-1):
+                self.is_valid = False
+                return False
+
+        if row + 1 < size:
+            if not self.satisfy_constraints_down(row+1, col):
+                self.is_valid = False
+                return False
+                
+        if col + 1 < size:
+            if not self.satisfy_constraints_right(row, col+1):
+                self.is_valid = False
+                return False
+        return True
+
+    def create_new_board(self, action):
+        new_board = Board(np.array([np.copy(inner_list) for inner_list in self.content]), self.size)
+        new_board.content[action[0]][action[1]] = action[2]
+        new_board.assignments = np.copy(self.assignments)
+        new_board.assignments = np.append(new_board.assignments, str(action[0]) + str(action[1]))
+        new_board.domains = np.copy(self.domains)
+        new_board.domains[new_board.board_index(action[0], action[1])] = [action[2]]
+        new_board.satisfy_constraints(action[0], action[1])
+        return new_board
+        
+             
 class PipeMania(Problem):
     def __init__(self, board: Board):
         """O construtor especifica o estado inicial."""
@@ -363,50 +455,37 @@ class PipeMania(Problem):
     def actions(self, state: PipeManiaState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
-        print("actions")
         board = state.board
+        if not board.is_valid:
+            print("oops")
+            return []
+        
         size = board.size
         actions = []
-        oops = False
-        for i in range(0, size):
-            for j in range(0, size):
-                if i-1 >= 0:
-                    board.satisfy_constraints_up(i-1, j)       
-                if j-1 >= 0:
-                   board.satisfy_constraints_left(i, j-1)
         
-                if i+1 < size:
-                    board.satisfy_constraints_down(i+1, j)
-                        
-                if j+1 < size:
-                    board.satisfy_constraints_right(i, j+1)
-          
         for i in range(0, size):
             for j in range(0, size):
                 for item in board.domains[board.board_index(i, j)]:
-                    if (item != board.get_value(i, j)) or (str(i) + str(j) not in board.assignments):
+                    if ((item != board.get_value(i, j)) or (str(i) + str(j) not in board.assignments)):
                         actions.append((i, j, item))
         print(actions)
         return actions
+        
         
     def result(self, state: PipeManiaState, action):
         """Retorna o estado resultante de executar a 'action' sobre
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
-        new_board = Board(np.copy([np.copy(inner_list) for inner_list in state.board.content]), state.board.size)
-        new_board.content[action[0]][action[1]] = action[2]
-        new_board.assignments = np.copy(state.board.assignments)
-        new_board.assignments = np.append(new_board.assignments, str(action[0]) + str(action[1]))
-        new_board.domains = np.copy(state.board.domains)
-        return PipeManiaState(new_board)
+        print(action)
+        return PipeManiaState(state.board.create_new_board(action))
        
 
     def goal_test(self, state: PipeManiaState):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas de acordo com as regras do problema."""
-        return state.board.assignments.size == pow(state.board.size, 2)
+        return len(state.board.assignments) == pow(state.board.size, 2)
            
 
     def h(self, node: Node):
@@ -422,4 +501,5 @@ if __name__ == "__main__":
     problem = PipeMania(board)
     solution = depth_first_tree_search(problem)
     solution.state.board.print()
+
 
