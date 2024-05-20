@@ -386,21 +386,25 @@ class Board:
         size = self.size
         if row - 1 >= 0:
             if not self.satisfy_constraints_up(row-1, col):
+                print("Dominio invalido")
                 self.is_valid = False
                 return False
                 
         if col - 1 >= 0:
             if not self.satisfy_constraints_left(row, col-1):
+                print("Dominio invalido")
                 self.is_valid = False
                 return False
 
         if row + 1 < size:
             if not self.satisfy_constraints_down(row+1, col):
+                print("Dominio invalido")
                 self.is_valid = False
                 return False
                 
         if col + 1 < size:
             if not self.satisfy_constraints_right(row, col+1):
+                print("Dominio invalido")
                 self.is_valid = False
                 return False
         return True
@@ -437,6 +441,7 @@ class PipeMania(Problem):
                 for item in board.domains[board.board_index(i, j)]:
                     if ((item != board.get_value(i, j)) or (str(i) + str(j) not in board.assignments)):
                         actions.append((i, j, item))
+        print(actions)
         return actions
         
         
@@ -445,6 +450,7 @@ class PipeMania(Problem):
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
+        print(action)
         return PipeManiaState(state.board.create_new_board(action))
        
 
@@ -465,8 +471,10 @@ if __name__ == "__main__":
     # Retirar a solução a partir do nó resultante,
     # Imprimir para o standard output no formato indicado.
     board = Board.parse_instance()
+    print(board.domains)
+    board.print()
     problem = PipeMania(board)
     solution = depth_first_tree_search(problem)
-    solution.state.board.print()
+    #solution.state.board.print()
 
 
