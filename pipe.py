@@ -77,87 +77,18 @@ class Board:
 
 
     def create_domain(self, row: int, col: int, piece: str):
-        if row == 0:
-            if piece[0] == 'F':
-                if col == 0:
-                    self.domains[self.board_index(row, col)] = np.array(['FB', 'FD'])
-                elif col == self.size -1:
-                    self.domains[self.board_index(row, col)] = np.array(['FB', 'FE'])
-                else:
-                    self.domains[self.board_index(row, col)] = np.array(['FB', 'FE', 'FD'])
+        if piece[0] == 'F':
+            self.domains[self.board_index(row, col)] = np.array(['FC','FB','FE', 'FD'])
             
-            elif piece[0] == 'B':
-                self.domains[self.board_index(row, col)] = np.array(['BB'])
-            
-            elif piece[0] == 'V':
-                if col == 0:
-                    self.domains[self.board_index(row, col)] = np.array(['VB'])
-                elif col == self.size -1:
-                    self.domains[self.board_index(row, col)] = np.array(['VE']) 
-                else:
-                    self.domains[self.board_index(row, col)] = np.array(['VB', 'VE'])
-            elif piece[0] == 'L':
-                self.domains[self.board_index(row, col)] = np.array(['LH'])
-
-        elif row == self.size - 1:
-            if piece[0] == 'F':
-                if col == 0:
-                    self.domains[self.board_index(row, col)] = np.array(['FC', 'FD'])
-                elif col == self.size -1:
-                    self.domains[self.board_index(row, col)] = np.array(['FC', 'FE'])
-                else:
-                    self.domains[self.board_index(row, col)] = np.array(['FC', 'FE', 'FD'])
-            
-            elif piece[0] == 'B':
-                self.domains[self.board_index(row, col)] = np.array(['BC'])
-            
-            elif piece[0] == 'V':
-                if col == 0:
-                    self.domains[self.board_index(row, col)] = np.array(['VD'])
-                elif col == self.size -1:
-                    self.domains[self.board_index(row, col)] = np.array(['VC']) 
-                else:
-                    self.domains[self.board_index(row, col)] = np.array(['VD', 'VC'])         
-            else:
-                self.domains[self.board_index(row, col)] = np.array(['LH'])
+        elif piece[0] == 'B':
+            self.domains[self.board_index(row, col)] = np.array(['BC', 'BB', 'BD', 'BE'])
         
-        elif col == 0:
-            if piece[0] == 'F':
-                self.domains[self.board_index(row, col)] = np.array(['FC','FB','FD'])
-                
-            elif piece[0] == 'B':
-                self.domains[self.board_index(row, col)] = np.array(['BD'])
+        elif piece[0] == 'V':
+            self.domains[self.board_index(row, col)] = np.array(['VC', 'VB','VD','VE'])
             
-            elif piece[0] == 'V':
-                self.domains[self.board_index(row, col)] = np.array(['VD', 'VB'])
-            
-            else:
-                self.domains[self.board_index(row, col)] = np.array(['LV'])
+        elif piece[0] == 'L':
+            self.domains[self.board_index(row, col)] = np.array(['LH', 'LV'])
         
-        elif col == self.size -1:
-            if piece[0] == 'F':
-                self.domains[self.board_index(row, col)] = np.array(['FC','FB','FE'])
-                
-            elif piece[0] == 'B':
-                self.domains[self.board_index(row, col)] = np.array(['BE'])
-            
-            elif piece[0] == 'V':
-                self.domains[self.board_index(row, col)] = np.array(['VC', 'VE'])
-                
-            else:
-                self.domains[self.board_index(row, col)] = np.array(['LV'])
-        else:
-            if piece[0] == 'F':
-                self.domains[self.board_index(row, col)] = np.array(['FC','FB','FE', 'FD'])
-                
-            elif piece[0] == 'B':
-                self.domains[self.board_index(row, col)] = np.array(['BC', 'BB', 'BD', 'BE'])
-            
-            elif piece[0] == 'V':
-                self.domains[self.board_index(row, col)] = np.array(['VC', 'VB','VD','VE'])
-                
-            elif piece[0] == 'L':
-                self.domains[self.board_index(row, col)] = np.array(['LH', 'LV'])
     
     @staticmethod
     def parse_instance():
@@ -178,6 +109,19 @@ class Board:
             i += 1
             line = stdin.readline().split()
         board.content = np.array(board.content)
+        for row in range(0, size):
+            for col in range(0, size):
+                if row == 0:
+                    board.satisfy_constraints_down(row, col)
+
+                elif row == size - 1:
+                    board.satisfy_constraints_up(row,col)
+                
+                if col == 0:
+                    board.satisfy_constraints_right(row, col)
+                
+                elif col == size -1:
+                    board.satisfy_constraints_left(row, col)
         return board
     
     def print(self):
@@ -189,7 +133,11 @@ class Board:
                     print(self.get_value(i, j))
     
     def satisfy_constraints_up(self, row: int, col:int):
-        pipe1_domain = self.domains[self.board_index(row+1, col)]
+        if row + 1 >= self.size:
+            pipe1_domain = ['LH']
+        else:
+            pipe1_domain = self.domains[self.board_index(row+1, col)]
+        
         pipe2 = self.get_value(row, col)
         pipe2_domain = self.domains[self.board_index(row, col)]
         
@@ -248,7 +196,11 @@ class Board:
         return True
 
     def satisfy_constraints_down(self, row: int, col:int):
-        pipe1_domain = self.domains[self.board_index(row-1, col)]
+        if row - 1 < 0:
+            pipe1_domain = ['LH']
+        else:
+            pipe1_domain = self.domains[self.board_index(row-1, col)]
+
         pipe2 = self.get_value(row, col)
         pipe2_domain = self.domains[self.board_index(row, col)]
         
@@ -307,7 +259,10 @@ class Board:
         return True
 
     def satisfy_constraints_left(self, row: int, col:int):
-        pipe1_domain = self.domains[self.board_index(row, col+1)]
+        if col + 1 >= self.size:
+            pipe1_domain = ['LV']
+        else:
+            pipe1_domain = self.domains[self.board_index(row, col + 1)]
         pipe2 = self.get_value(row, col)
         pipe2_domain = self.domains[self.board_index(row, col)]
 
@@ -366,7 +321,10 @@ class Board:
         return True
         
     def satisfy_constraints_right(self, row: int, col:int):
-        pipe1_domain = self.domains[self.board_index(row, col-1)]
+        if col - 1 < 0:
+            pipe1_domain = ['LV']
+        else:
+            pipe1_domain = self.domains[self.board_index(row, col - 1)]
         pipe2 = self.get_value(row, col)
         pipe2_domain = self.domains[self.board_index(row, col)]
         
