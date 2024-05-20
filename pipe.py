@@ -105,23 +105,25 @@ class Board:
                 board.create_domain(i, j, line[j])
                 board.content[i][j] = board.domains[board.board_index(i, j)][0]
                 if board.domains[board.board_index(i, j)].size == 1:
-                    board.assignments = np.append(board.assignments, str(i) + str(j))
+                    board.assignments = np.append(board.assignments, str(i) + ":" + str(j))
             i += 1
             line = stdin.readline().split()
         board.content = np.array(board.content)
+        queue = []
         for row in range(0, size):
             for col in range(0, size):
                 if row == 0:
-                    board.satisfy_constraints_down(row, col)
+                    queue.append(('d', row, col))
 
                 elif row == size - 1:
-                    board.satisfy_constraints_up(row,col)
+                    queue.append(('u', row, col))
                 
                 if col == 0:
-                    board.satisfy_constraints_right(row, col)
+                    queue.append(('r', row, col))
                 
                 elif col == size -1:
-                    board.satisfy_constraints_left(row, col)
+                    queue.append(('l', row, col))
+        board.satisfy_constraints(queue, 0, 0)
         return board
     
     def print(self):
@@ -132,7 +134,7 @@ class Board:
                 else:
                     print(self.get_value(i, j))
     
-    def satisfy_constraints_up(self, row: int, col:int):
+    def satisfy_constraints_up(self, queue:list, row: int, col:int):
         if row + 1 >= self.size:
             pipe1_domain = ['LH']
         else:
@@ -189,13 +191,12 @@ class Board:
                 self.assignments = []
                 return False
             self.content[row][col] = new_domain[0]
-            if new_domain_size == 1 and (str(row) + str(col) not in self.assignments):
-                self.assignments = np.append(self.assignments, str(row) + str(col))
-            if not self.satisfy_constraints(row, col):
-                return False
+            if new_domain_size == 1 and (str(row) + ":" + str(col) not in self.assignments):
+                self.assignments = np.append(self.assignments, str(row) + ":" + str(col))
+            queue.extend([('u', row-1, col), ('d', row+1, col), ('l', row, col-1), ('r', row, col+1)])
         return True
 
-    def satisfy_constraints_down(self, row: int, col:int):
+    def satisfy_constraints_down(self, queue:list, row: int, col:int):
         if row - 1 < 0:
             pipe1_domain = ['LH']
         else:
@@ -252,13 +253,12 @@ class Board:
                 self.assignments = []
                 return False
             self.content[row][col] = new_domain[0]
-            if new_domain_size == 1 and (str(row) + str(col) not in self.assignments):
-                self.assignments = np.append(self.assignments, str(row) + str(col))
-            if not self.satisfy_constraints(row, col):
-                return False
+            if new_domain_size == 1 and (str(row) + ":" + str(col) not in self.assignments):
+                self.assignments = np.append(self.assignments, str(row) + ":" +  str(col))
+            queue.extend([('u', row-1, col), ('d', row+1, col), ('l', row, col-1), ('r', row, col+1)])
         return True
 
-    def satisfy_constraints_left(self, row: int, col:int):
+    def satisfy_constraints_left(self, queue:list, row: int, col:int):
         if col + 1 >= self.size:
             pipe1_domain = ['LV']
         else:
@@ -314,13 +314,12 @@ class Board:
                 self.assignments = []
                 return False
             self.content[row][col] = new_domain[0]
-            if new_domain_size == 1 and (str(row) + str(col) not in self.assignments):
-                self.assignments = np.append(self.assignments, str(row) + str(col))
-            if not self.satisfy_constraints(row, col):
-                return False
+            if new_domain_size == 1 and (str(row) + ":" + str(col) not in self.assignments):
+                self.assignments = np.append(self.assignments, str(row) + ":" + str(col))
+            queue.extend([('u', row-1, col), ('d', row+1, col), ('l', row, col-1), ('r', row, col+1)])
         return True
         
-    def satisfy_constraints_right(self, row: int, col:int):
+    def satisfy_constraints_right(self, queue:list, row: int, col:int):
         if col - 1 < 0:
             pipe1_domain = ['LV']
         else:
@@ -376,48 +375,99 @@ class Board:
                 self.assignments = []
                 return False
             self.content[row][col] = new_domain[0]
-            if new_domain_size == 1 and (str(row) + str(col) not in self.assignments):
-                self.assignments = np.append(self.assignments, str(row) + str(col))
-            if not self.satisfy_constraints(row, col):
-                return False
+            if new_domain_size == 1 and (str(row) + ":" + str(col) not in self.assignments):
+                self.assignments = np.append(self.assignments, str(row) + ":" + str(col))
+            queue.extend([('u', row-1, col), ('d', row+1, col), ('l', row, col-1), ('r', row, col+1)])
         return True
     
-    def satisfy_constraints(self, row: int, col: int):
+    def satisfy_constraints(self, queue:list, row: int, col: int):
         size = self.size
-        if row - 1 >= 0:
-            if not self.satisfy_constraints_up(row-1, col):
-                print("Dominio invalido")
-                self.is_valid = False
-                return False
-                
-        if col - 1 >= 0:
-            if not self.satisfy_constraints_left(row, col-1):
-                print("Dominio invalido")
-                self.is_valid = False
-                return False
+        if not queue:
+            queue = [('u', row-1, col), ('d', row+1, col), ('l', row, col-1), ('r', row, col+1)]
+        
+        while queue:
+            constraint = queue.pop()
+            if constraint[0] == 'u' and constraint[1] >= 0:
+                if not self.satisfy_constraints_up(queue, constraint[1], constraint[2]):
+                    self.is_valid = False
+                    return False
+                    
+            if constraint[0] == 'l' and constraint[2] >= 0:
+                if not self.satisfy_constraints_left(queue, constraint[1], constraint[2]):
+                    self.is_valid = False
+                    return False
 
-        if row + 1 < size:
-            if not self.satisfy_constraints_down(row+1, col):
-                print("Dominio invalido")
-                self.is_valid = False
-                return False
-                
-        if col + 1 < size:
-            if not self.satisfy_constraints_right(row, col+1):
-                print("Dominio invalido")
-                self.is_valid = False
-                return False
+            if constraint[0] == 'd' and constraint[1] < size:
+                if not self.satisfy_constraints_down(queue, constraint[1], constraint[2]):
+                    self.is_valid = False
+                    return False
+                    
+            if constraint[0] == 'r' and constraint[2] < size:
+                if not self.satisfy_constraints_right(queue, constraint[1], constraint[2]):
+                    self.is_valid = False
+                    return False
         return True
 
     def create_new_board(self, action):
         new_board = Board(np.array([np.copy(inner_list) for inner_list in self.content]), self.size)
         new_board.content[action[0]][action[1]] = action[2]
         new_board.assignments = np.copy(self.assignments)
-        new_board.assignments = np.append(new_board.assignments, str(action[0]) + str(action[1]))
+        new_board.assignments = np.append(new_board.assignments, str(action[0]) + ":" + str(action[1]))
         new_board.domains = np.copy(self.domains)
         new_board.domains[new_board.board_index(action[0], action[1])] = [action[2]]
-        new_board.satisfy_constraints(action[0], action[1])
+        new_board.satisfy_constraints([], action[0], action[1])
         return new_board
+    
+    def connects_up(self):
+        return ('FC', 'BC', 'BD', 'BE', 'VC', 'VD', 'LV')
+    
+    def connects_down(self):
+        return ('FB', 'BD', 'BE', 'BB', 'VE', 'VB', 'LV')
+    
+    def connects_left(self):
+        return ('FE', 'BC', 'BB', 'BE', 'VC', 'VE', 'LH')
+    
+    def connects_right(self):
+        return ('FD', 'BC', 'BB', 'BD', 'VB', 'VD', 'LH')
+
+    def all_connected(self):
+        revised = [(0, 0)]
+        queue = [(0, 0)]
+        while queue:
+            coordinates = queue.pop()
+            row = coordinates[0]
+            col = coordinates[1]
+            piece = self.get_value(row, col)
+
+            if piece in self.connects_up():
+                if row == 0 or self.get_value(row - 1, col) not in self.connects_down():
+                    return False
+                if (row - 1, col) not in revised:
+                    queue.append((row - 1, col))
+                    revised.append((row - 1, col))
+
+            if piece in self.connects_down():
+                if row == self.size or self.get_value(row + 1, col) not in self.connects_up():
+                    return False
+                if (row + 1, col) not in revised:
+                    queue.append((row + 1, col))
+                    revised.append((row + 1, col))
+
+            if piece in self.connects_right():
+                if row == self.size or self.get_value(row, col + 1) not in self.connects_left():
+                    return False
+                if (row, col + 1) not in revised:
+                    queue.append((row, col + 1))
+                    revised.append((row, col + 1))
+
+            if piece in self.connects_left():
+                if col == 0 or self.get_value(row, col-1) not in self.connects_right():
+                    return False
+                if (row, col - 1) not in revised:
+                    queue.append((row, col-1))
+                    revised.append((row, col-1))
+                    
+        return len(revised) == pow(self.size, 2)
         
              
 class PipeMania(Problem):
@@ -439,9 +489,9 @@ class PipeMania(Problem):
         for i in range(0, size):
             for j in range(0, size):
                 for item in board.domains[board.board_index(i, j)]:
-                    if ((item != board.get_value(i, j)) or (str(i) + str(j) not in board.assignments)):
+                    if ((item != board.get_value(i, j)) or (str(i) + ":" + str(j) not in board.assignments)):
                         actions.append((i, j, item))
-        print(actions)
+        
         return actions
         
         
@@ -450,7 +500,6 @@ class PipeMania(Problem):
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
-        print(action)
         return PipeManiaState(state.board.create_new_board(action))
        
 
@@ -458,7 +507,7 @@ class PipeMania(Problem):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas de acordo com as regras do problema."""
-        return len(state.board.assignments) == pow(state.board.size, 2)
+        return state.board.all_connected()
            
 
     def h(self, node: Node):
@@ -467,14 +516,9 @@ class PipeMania(Problem):
 
 
 if __name__ == "__main__":
-    # Usar uma técnica de procura para resolver a instância,
-    # Retirar a solução a partir do nó resultante,
-    # Imprimir para o standard output no formato indicado.
     board = Board.parse_instance()
-    print(board.domains)
-    board.print()
     problem = PipeMania(board)
     solution = depth_first_tree_search(problem)
-    #solution.state.board.print()
+    solution.state.board.print()
 
 
