@@ -189,225 +189,237 @@ class Board:
                     print(self.get_value(i, j))
     
     def satisfy_constraints_up(self, row: int, col:int):
-        pipe1 = self.get_value(row + 1, col)
+        pipe1_domain = self.domains[self.board_index(row+1, col)]
         pipe2 = self.get_value(row, col)
         pipe2_domain = self.domains[self.board_index(row, col)]
+        
+        if pipe2[0] == 'F':
+            restrictions = ['FC', 'FD', 'FE', 'FB']
+        elif pipe2[0] == 'B':
+            restrictions = ['BC', 'BD', 'BE', 'BB']
+        elif pipe2[0] == 'V':
+            restrictions = ['VC', 'VD', 'VE', 'VB']
+        elif pipe2[0] == 'L':
+            restrictions = ['LH', 'LV']
 
-        if pipe1 in ['FC', 'BC', 'BD', 'BE', 'VC', 'VD', 'LV']:
-            if (pipe2[0] == 'F'):
-                if (pipe1 == 'FC'):
-                    restrictions = np.array(['FC', 'FD', 'FE', 'FB'])
-                else:    
-                    restrictions = np.array(['FC', 'FD', 'FE'])
-            
-            elif (pipe2[0] == 'B'):
-                restrictions = np.array(['BC'])
-            
-            elif (pipe2[0] == 'V'):
-                restrictions = np.array(['VD', 'VC'])
+        for orientation in pipe1_domain:
+            if orientation in ['FC', 'BC', 'BD', 'BE', 'VC', 'VD', 'LV']:
+                if (pipe2[0] == 'F'):
+                    if (orientation == 'FC'):
+                        restrictions = [item for item in restrictions if item in ['FC', 'FD', 'FE', 'FB']]
+                    else:    
+                        restrictions = [item for item in restrictions if item in ['FC', 'FD', 'FE']]
+                
+                elif (pipe2[0] == 'B'):
+                    restrictions = [item for item in restrictions if item in ['BC']]
+                
+                elif (pipe2[0] == 'V'):
+                    restrictions = [item for item in restrictions if item in ['VD', 'VC']]
 
-            elif (pipe2[0] == 'L'):
-                restrictions = np.array(['LH'])
-            
-        else:
-            if (pipe2[0] == 'F'):
-                restrictions = np.array(['FB'])
-            
-            elif (pipe2[0] == 'B'):
-                restrictions = np.array(['BB', 'BD', 'BE'])
-            
-            elif (pipe2[0] == 'V'):
-                restrictions = np.array(['VB', 'VE'])
+                elif (pipe2[0] == 'L'):
+                    restrictions = [item for item in restrictions if item in ['LH']]
+                
+            else:
+                if (pipe2[0] == 'F'):
+                    restrictions = [item for item in restrictions if item in ['FB']]
+                
+                elif (pipe2[0] == 'B'):
+                    restrictions = [item for item in restrictions if item in ['BB', 'BD', 'BE']]
+                
+                elif (pipe2[0] == 'V'):
+                    restrictions = [item for item in restrictions if item in ['VB', 'VE']]
 
-            elif (pipe2[0] == 'L'):
-                restrictions = np.array(['LV'])
+                elif (pipe2[0] == 'L'):
+                    restrictions = [item for item in restrictions if item in ['LV']]
 
-        new_domain = [item for item in pipe2_domain if item not in restrictions]
+        new_domain = np.array([item for item in pipe2_domain if item not in restrictions])
         self.domains[self.board_index(row, col)] = new_domain
         new_domain_size = len(new_domain)
 
         if len(pipe2_domain) > new_domain_size:
             if new_domain_size == 0:
-                print("Dominio vazio")
                 self.assignments = []
                 return False
-            print("-------------------")
-            print("mudou em cima de " + str(row+1) + str(col))
-            self.print()
-            print(self.domains)
             self.content[row][col] = new_domain[0]
             if new_domain_size == 1 and (str(row) + str(col) not in self.assignments):
                 self.assignments = np.append(self.assignments, str(row) + str(col))
-                print(self.assignments)
-            print("-------------------")
             if not self.satisfy_constraints(row, col):
                 return False
         return True
 
     def satisfy_constraints_down(self, row: int, col:int):
-        pipe1 = self.get_value(row - 1, col)
+        pipe1_domain = self.domains[self.board_index(row-1, col)]
         pipe2 = self.get_value(row, col)
         pipe2_domain = self.domains[self.board_index(row, col)]
         
-        if pipe1 in ['FB', 'BD', 'BE', 'BB', 'VE', 'VB', 'LV']:
-            if (pipe2[0] == 'F'):
-                if (pipe1 == 'FB'):
-                    restrictions = np.array(['FC', 'FD', 'FE', 'FB'])
-                else: 
-                    restrictions = np.array(['FB', 'FD', 'FE'])
-            
-            elif (pipe2[0] == 'B'):
-                restrictions = np.array(['BB'])
-            
-            elif (pipe2[0] == 'V'):
-                restrictions = np.array(['VE', 'VB'])
+        if pipe2[0] == 'F':
+            restrictions = ['FC', 'FD', 'FE', 'FB']
+        elif pipe2[0] == 'B':
+            restrictions = ['BC', 'BD', 'BE', 'BB']
+        elif pipe2[0] == 'V':
+            restrictions = ['VC', 'VD', 'VE', 'VB']
+        elif pipe2[0] == 'L':
+            restrictions = ['LH', 'LV']
+        
+        for orientation in pipe1_domain:
+            if orientation in ['FB', 'BD', 'BE', 'BB', 'VE', 'VB', 'LV']:
+                if (pipe2[0] == 'F'):
+                    if (orientation == 'FB'):
+                        restrictions = [item for item in restrictions if item in ['FC', 'FD', 'FE', 'FB']]
+                    else: 
+                        restrictions = [item for item in restrictions if item in ['FB', 'FD', 'FE']]
+                
+                elif (pipe2[0] == 'B'):
+                    restrictions = [item for item in restrictions if item in ['BB']]
+                
+                elif (pipe2[0] == 'V'):
+                    restrictions = [item for item in restrictions if item in ['VE', 'VB']]
 
-            elif (pipe2[0] == 'L'):
-                restrictions = np.array(['LH'])
-            
-        else:
-            if (pipe2[0] == 'F'):
-                restrictions = np.array(['FC'])
-            
-            elif (pipe2[0] == 'B'):
-                restrictions = np.array(['BC', 'BD', 'BE'])
-            
-            elif (pipe2[0] == 'V'):
-                restrictions = np.array(['VC', 'VD'])
+                elif (pipe2[0] == 'L'):
+                    restrictions = [item for item in restrictions if item in ['LH']]
+                
+            else:
+                if (pipe2[0] == 'F'):
+                    restrictions = [item for item in restrictions if item in ['FC']]
+                
+                elif (pipe2[0] == 'B'):
+                    restrictions = [item for item in restrictions if item in ['BC', 'BD', 'BE']]
+                
+                elif (pipe2[0] == 'V'):
+                    restrictions = [item for item in restrictions if item in ['VC', 'VD']]
 
-            elif (pipe2[0] == 'L'):
-                restrictions = np.array(['LV'])
+                elif (pipe2[0] == 'L'):
+                    restrictions = [item for item in restrictions if item in ['LV']]
 
-        new_domain = [item for item in pipe2_domain if item not in restrictions]
+        new_domain = np.array([item for item in pipe2_domain if item not in restrictions])
         self.domains[self.board_index(row, col)] = new_domain
         new_domain_size = len(new_domain)
 
         if len(pipe2_domain) > new_domain_size:
             if new_domain_size == 0:
-                print("Dominio vazio")
                 self.assignments = []
                 return False
-            print("-------------------")
-            print("mudou em baixo de " + str(row-1) + str(col))
-            self.print()
-            print(self.domains)
             self.content[row][col] = new_domain[0]
             if new_domain_size == 1 and (str(row) + str(col) not in self.assignments):
                 self.assignments = np.append(self.assignments, str(row) + str(col))
-                print(self.assignments)
-            print("-------------------")
             if not self.satisfy_constraints(row, col):
                 return False
         return True
 
     def satisfy_constraints_left(self, row: int, col:int):
-        pipe1 = self.get_value(row, col + 1)
+        pipe1_domain = self.domains[self.board_index(row, col+1)]
         pipe2 = self.get_value(row, col)
         pipe2_domain = self.domains[self.board_index(row, col)]
 
-        if pipe1 in ['FE', 'BC', 'BB', 'BE', 'VC', 'VE', 'LH']:
-            if (pipe2[0] == 'F'):
-                if (pipe1 == 'FE'):
-                    restrictions = np.array(['FC', 'FD', 'FE', 'FB'])
-                else:    
-                    restrictions = np.array(['FC', 'FB', 'FE'])
+        if pipe2[0] == 'F':
+            restrictions = ['FC', 'FD', 'FE', 'FB']
+        elif pipe2[0] == 'B':
+            restrictions = ['BC', 'BD', 'BE', 'BB']
+        elif pipe2[0] == 'V':
+            restrictions = ['VC', 'VD', 'VE', 'VB']
+        elif pipe2[0] == 'L':
+            restrictions = ['LH', 'LV']
             
-            elif (pipe2[0] == 'B'):
-                restrictions = np.array(['BE'])
-            
-            elif (pipe2[0] == 'V'):
-                restrictions = np.array(['VE', 'VC'])
+        for orientation in pipe1_domain:
+            if orientation in ['FE', 'BC', 'BB', 'BE', 'VC', 'VE', 'LH']:
+                if (pipe2[0] == 'F'):
+                    if (orientation == 'FE'):
+                        restrictions = [item for item in restrictions if item in ['FC', 'FD', 'FE', 'FB']]
+                    else:    
+                        restrictions = [item for item in restrictions if item in ['FC', 'FB', 'FE']]
+                
+                elif (pipe2[0] == 'B'):
+                    restrictions = [item for item in restrictions if item in ['BE']]
+                
+                elif (pipe2[0] == 'V'):
+                    restrictions = [item for item in restrictions if item in ['VE', 'VC']]
 
-            elif (pipe2[0] == 'L'):
-                restrictions = np.array(['LV'])
-            
-        else:
-            if (pipe2[0] == 'F'):
-                restrictions = np.array(['FD'])
-            
-            elif (pipe2[0] == 'B'):
-                restrictions = np.array(['BB', 'BD', 'BC'])
-            
-            elif (pipe2[0] == 'V'):
-                restrictions = np.array(['VB', 'VD'])
+                elif (pipe2[0] == 'L'):
+                    restrictions = [item for item in restrictions if item in ['LV']]
+                
+            else:
+                if (pipe2[0] == 'F'):
+                    restrictions = [item for item in restrictions if item in ['FD']]
+                
+                elif (pipe2[0] == 'B'):
+                    restrictions = [item for item in restrictions if item in ['BB', 'BD', 'BC']]
+                
+                elif (pipe2[0] == 'V'):
+                    restrictions = [item for item in restrictions if item in ['VB', 'VD']]
 
-            elif (pipe2[0] == 'L'):
-                restrictions = np.array(['LH'])
+                elif (pipe2[0] == 'L'):
+                    restrictions = [item for item in restrictions if item in ['LH']]
 
-        new_domain = [item for item in pipe2_domain if item not in restrictions]
+        new_domain = np.array([item for item in pipe2_domain if item not in restrictions])
         self.domains[self.board_index(row, col)] = new_domain
         new_domain_size = len(new_domain)
 
         if len(pipe2_domain) > new_domain_size:
             if new_domain_size == 0:
-                print("Dominio vazio")
                 self.assignments = []
                 return False
-            print("-------------------")
-            print("mudou a esquerda de " + str(row) + str(col+1))
-            self.print()
-            print(self.domains)
             self.content[row][col] = new_domain[0]
             if new_domain_size == 1 and (str(row) + str(col) not in self.assignments):
                 self.assignments = np.append(self.assignments, str(row) + str(col))
-                print(self.assignments)
-            print("-------------------")
             if not self.satisfy_constraints(row, col):
                 return False
         return True
         
     def satisfy_constraints_right(self, row: int, col:int):
-        pipe1 = self.get_value(row, col - 1)
+        pipe1_domain = self.domains[self.board_index(row, col-1)]
         pipe2 = self.get_value(row, col)
         pipe2_domain = self.domains[self.board_index(row, col)]
+        
+        if pipe2[0] == 'F':
+            restrictions = ['FC', 'FD', 'FE', 'FB']
+        elif pipe2[0] == 'B':
+            restrictions = ['BC', 'BD', 'BE', 'BB']
+        elif pipe2[0] == 'V':
+            restrictions = ['VC', 'VD', 'VE', 'VB']
+        elif pipe2[0] == 'L':
+            restrictions = ['LH', 'LV']
 
-        if pipe1 in ['FD', 'BC', 'BB', 'BD', 'VB', 'VD', 'LH']:
-            if (pipe2[0] == 'F'):
-                if (pipe1 == 'FD'):
-                    restrictions = np.array(['FC', 'FD', 'FE', 'FB'])
-                else:    
-                    restrictions = np.array(['FC', 'FD', 'FB'])
-            
-            elif (pipe2[0] == 'B'):
-                restrictions = np.array(['BD'])
-            
-            elif (pipe2[0] == 'V'):
-                restrictions = np.array(['VB', 'VD'])
+        for orientation in pipe1_domain:
+            if orientation in ['FD', 'BC', 'BB', 'BD', 'VB', 'VD', 'LH']:
+                if (pipe2[0] == 'F'):
+                    if (orientation == 'FD'):
+                        restrictions = [item for item in restrictions if item in ['FC', 'FD', 'FE', 'FB']]
+                    else:    
+                        restrictions = [item for item in restrictions if item in ['FC', 'FD', 'FB']]
+                
+                elif (pipe2[0] == 'B'):
+                    restrictions = [item for item in restrictions if item in ['BD']]
+                
+                elif (pipe2[0] == 'V'):
+                    restrictions = [item for item in restrictions if item in ['VB', 'VD']]
 
-            elif (pipe2[0] == 'L'):
-                restrictions = np.array(['LV'])
-            
-        else:
-            if (pipe2[0] == 'F'):
-                restrictions = np.array(['FE'])
-            
-            elif (pipe2[0] == 'B'):
-                restrictions = np.array(['BB', 'BC', 'BE'])
-            
-            elif (pipe2[0] == 'V'):
-                restrictions = np.array(['VC', 'VE'])
+                elif (pipe2[0] == 'L'):
+                    restrictions = [item for item in restrictions if item in ['LV']]
+                
+            else:
+                if (pipe2[0] == 'F'):
+                    restrictions = [item for item in restrictions if item in ['FE']]
+                
+                elif (pipe2[0] == 'B'):
+                    restrictions = [item for item in restrictions if item in ['BB', 'BC', 'BE']]
+                
+                elif (pipe2[0] == 'V'):
+                    restrictions = [item for item in restrictions if item in ['VC', 'VE']]
 
-            elif (pipe2[0] == 'L'):
-                restrictions = np.array(['LH'])
+                elif (pipe2[0] == 'L'):
+                    restrictions = [item for item in restrictions if item in ['LH']]
 
-        new_domain = [item for item in pipe2_domain if item not in restrictions]
+        new_domain = np.array([item for item in pipe2_domain if item not in restrictions])
         self.domains[self.board_index(row, col)] = new_domain
         new_domain_size = len(new_domain)
         
         if len(pipe2_domain) > new_domain_size:
             if new_domain_size == 0:
-                print("Dominio vazio")
                 self.assignments = []
                 return False
-            print("-------------------")
-            print("mudou a direita de " + str(row) + str(col-1))
-            self.print()
-            print(self.domains)
             self.content[row][col] = new_domain[0]
             if new_domain_size == 1 and (str(row) + str(col) not in self.assignments):
                 self.assignments = np.append(self.assignments, str(row) + str(col))
-                print(self.assignments)
-            print("-------------------")
             if not self.satisfy_constraints(row, col):
                 return False
         return True
@@ -457,7 +469,6 @@ class PipeMania(Problem):
         partir do estado passado como argumento."""
         board = state.board
         if not board.is_valid:
-            print("oops")
             return []
         
         size = board.size
@@ -468,7 +479,6 @@ class PipeMania(Problem):
                 for item in board.domains[board.board_index(i, j)]:
                     if ((item != board.get_value(i, j)) or (str(i) + str(j) not in board.assignments)):
                         actions.append((i, j, item))
-        print(actions)
         return actions
         
         
@@ -477,7 +487,6 @@ class PipeMania(Problem):
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
-        print(action)
         return PipeManiaState(state.board.create_new_board(action))
        
 
